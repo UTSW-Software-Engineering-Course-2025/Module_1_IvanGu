@@ -27,13 +27,13 @@ def Hbeta(D, beta=1.0):
     return H, P
 
 def compute_D(X):
-    """_summary_
+    """computes nxn distance matrix of input X
 
     Args:
-        X (_type_): _description_
+        X (ndarray): input matrix with shape (n,n)
 
     Returns:
-        _type_: _description_
+        D: distance matrix with shape equal to the input matrix
     """
     
     # sum across rows, shape (n_samples, )
