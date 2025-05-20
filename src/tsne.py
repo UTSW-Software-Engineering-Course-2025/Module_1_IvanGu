@@ -27,27 +27,55 @@ def pca(X, no_dims=50):
 
 
 def compute_q_ij(Y):
-    D_y = utils.compute_D(Y)
+    """
+    computes probability distribution (t-distribution) based on low-dimension embedding Y
+
+    Parameters
+    ----------
+    Y : numpy.ndarray
+        low-dimensional representation of Y
+
+    Returns
+    -------
+    num : numpy.ndarray
+        inverse distance matrix of Y, to be used for gradient calculations
     
+    q_ij_clipped : numpy.ndarray
+        clipped Q_ij with minimum val = 1e-12    
+    """
+    
+    # compute nxn distance matrix and inverse dist matrix
+    D_y = utils.compute_D(Y)
     num = 1 / (1+D_y)
 
     # set diaonal to zero
     num[np.arange(num.shape[0]), np.arange(num.shape[0])] = 0
     denom = np.sum(num)
 
+    # calculate Q_ij
     q_ij = num / denom
-
     q_ij_clipped = np.clip(q_ij, a_min=1e-12, a_max=np.inf)
 
     return num, q_ij_clipped
 
 def compute_gradient(P, Q, Y, inv_D):
-    """_summary_
+    """computes the gradient w.r.t. to Y
 
-    Args:
-        P (_type_): p_ij
-        Q (_type_): q_ij
-        Y (_type_): low dimension Y
+    Parameters
+    ----------
+    P : numpy.ndarray
+        P_ij, pairwise and symmetrical to P_j|i and P_i|j
+    Q : numpy.ndarray
+        Q_ij, probability distribution
+    Y : numpy.ndarray
+        low-dimension representation of Y
+    inv_D : numpy.ndarray
+        inverse distance matrix of Y, 1st output from compute_q_ij()
+
+    Returns
+    -------
+    numpy.ndarray
+        gradient of loss funciton w.r.t. to Y
     """
 
     # initialize dY
@@ -68,6 +96,32 @@ def compute_gradient(P, Q, Y, inv_D):
     return dY
 
 def tsne(X, no_dims, perplexity, initial_momentum=0.5, final_momentum=0.8, eta=500, min_gain=0.01, T=1000):
+    """_summary_
+
+    Parameters
+    ----------
+    X : _type_
+        _description_
+    no_dims : _type_
+        _description_
+    perplexity : _type_
+        _description_
+    initial_momentum : float, optional
+        _description_, by default 0.5
+    final_momentum : float, optional
+        _description_, by default 0.8
+    eta : int, optional
+        _description_, by default 500
+    min_gain : float, optional
+        _description_, by default 0.01
+    T : int, optional
+        _description_, by default 1000
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
 
     (n, d) = X.shape
 
