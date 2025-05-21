@@ -188,17 +188,17 @@ def parse_tsne_args():
     argparser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     # file path args
-    argparser.add_argument("--path_to_X", type=str, default="", help="path to the input file")
+    argparser.add_argument("path_to_X", type=str, help="path to the input file")
     argparser.add_argument("--path_to_labels", type=str, default="../data/mnist2500_labels.txt", help="path to the labels file")
 
     # tsne args
     argparser.add_argument("--no_dims", type=int, default=2, help="number of dimensions")
     argparser.add_argument("--perplexity", type=int, default=30, help="perplexity of tsne, used for precision adjustment")
     argparser.add_argument("--T", type=int, default=1000, help="number of time steps")
-    argparser.add_argument("--initial_momentum", type=int, default=0.5, help="initial momentum during early stage")
-    argparser.add_argument("--final_momentum", type=int, default=0.8, help="momentum after early stage")
+    argparser.add_argument("--initial_momentum", type=float, default=0.5, help="initial momentum during early stage")
+    argparser.add_argument("--final_momentum", type=float, default=0.8, help="momentum after early stage")
     argparser.add_argument("--eta", type=int, default=500, help="another component that determines delta Y")    
-    argparser.add_argument("--min_gain", type=int, default=0.01, help="minimum gains used for clipping during optimization")
+    argparser.add_argument("--min_gain", type=float, default=0.01, help="minimum gains used for clipping during optimization")
 
     # verbose indicators
     argparser.add_argument("--print_all", action="store_true", help="Print t-sne progress during code execution")   
@@ -214,8 +214,10 @@ def main():
     parser = parse_tsne_args()
     args = parser.parse_args()
 
+    print(args)
+
     # set the default arg list and compare with CLI input
-    default_args = parser.parse_args([])
+    default_args = parser.parse_args(['dummy.txt'])
     new_args = get_non_default_args(args, default_args)
 
     # inform the user of non-default arguments if any
@@ -253,4 +255,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
