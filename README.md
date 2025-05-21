@@ -1,4 +1,4 @@
-# Module_1_IvanGu
+# Module1 t-sne from scratch IvanGu
 This repo implements a classic non-linear dimensionality reduction algorithmed called t-SNE: t-distributed Stochastic Neighbor Embedding.
 
 For a more detailed description of t-SNE, please refer to https://en.wikipedia.org/wiki/T-distributed_stochastic_neighbor_embedding
@@ -26,4 +26,4 @@ A full list of parameter options:
    --final_momentum | momentum after early stage | 0.8
    --eta | assumed radius for cells to use in cell segmentation | 500
    --min_gain |  minimum gains used for clipping during optimization | 0.01
-   --print_all |  Print t-sne progress during code execution | 
+   --print_all |  print t-sne progress during code execution | 
