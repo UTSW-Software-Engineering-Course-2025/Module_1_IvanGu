@@ -29,11 +29,15 @@ def Hbeta(D, beta=1.0):
 def compute_D(X):
     """computes nxn distance matrix of input X
 
-    Args:
-        X (ndarray): input matrix with shape (n,n)
+    Parameters
+    ----------
+    X : numpy.adarray
+        input matrix with shape (n,d)
 
-    Returns:
-        D: distance matrix with shape equal to the input matrix
+    Returns
+    -------
+    D : numpy.ndarray
+        distance matrix with shape (n,n)
     """
     
     # sum across rows, shape (n_samples, )

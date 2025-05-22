@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import argparse
+
 import adjustbeta as utils
 
 def pca(X, no_dims=50):
@@ -82,10 +84,10 @@ def compute_gradient(P, Q, Y, inv_D):
     n, d = Y.shape
     dY = np.zeros_like(Y)
 
-    # early_clip = p_ij
+    # diff of P_ij and Q_ij, shape (n,n)
     pq_diff = P - Q
     
-    for row in range(n): #
+    for row in range(n):
         y_diff_term = Y[row,:][None,:]-Y # shape (n,d)
         pq_diff_term = pq_diff[row,:,None] # shape (n,1)
         inv_D_term = inv_D[row,:,None] # shape (n,1)
@@ -95,38 +97,35 @@ def compute_gradient(P, Q, Y, inv_D):
 
     return dY
 
-def tsne(X, no_dims, perplexity, initial_momentum=0.5, final_momentum=0.8, eta=500, min_gain=0.01, T=1000):
-    """_summary_
+def tsne(X, no_dims, perplexity, initial_momentum=0.5, final_momentum=0.8, eta=500, min_gain=0.01, T=1000, print_all=True):
+    """implementation of tsne from scratch
 
     Parameters
     ----------
-    X : _type_
-        _description_
-    no_dims : _type_
-        _description_
-    perplexity : _type_
-        _description_
+    X : numpy.adarray
+        nxd input of matrix X, either before or after PCA
+    no_dims : int
+        number of dimensions to visualize tsne
+    perplexity : int
+        perplexity of tsne, used for precision adjustment
     initial_momentum : float, optional
-        _description_, by default 0.5
+        determines changes in Y in the initial stage, by default 0.5
     final_momentum : float, optional
-        _description_, by default 0.8
+        determines changes in Y after the initial stage, by default 0.8
     eta : int, optional
-        _description_, by default 500
+        eta-another component that determines delta Y, by default 500
     min_gain : float, optional
-        _description_, by default 0.01
+        minimum gains used for clipping during optimization, by default 0.01
     T : int, optional
-        _description_, by default 1000
+        number of timesteps, by default 1000
 
     Returns
     -------
-    _type_
-        _description_
+    Y
+        low-dimension t-sne representation of input X
     """
 
     (n, d) = X.shape
-
-    # # preprocessing with pca
-    # X_pca = pca(X)
 
     # precision adjustment by perplexity
     cond_p_ji, beta = utils.adjustbeta(X, tol=1e-5, perplexity=perplexity)
@@ -146,44 +145,113 @@ def tsne(X, no_dims, perplexity, initial_momentum=0.5, final_momentum=0.8, eta=5
     # loop through time points to update Y
     for t in range(T):
 
+        # computes Q_ij then gradient in each iteration
         inv_D, q_ij = compute_q_ij(Y)
         dY = compute_gradient(p_ij, q_ij, Y, inv_D)
 
+        # monitor KL divergence for debugging
         kl_divergence = np.sum(p_ij * np.log(p_ij / q_ij))
-        if t % 10 == 0:
-            # print(f"Iteration {t}: KL divergence = {kl_divergence:.5f}")
-            print(f"[{t}] KL: {kl_divergence:.4f}, ||grad||: {np.linalg.norm(dY):.2e}, ||Y||: {np.linalg.norm(Y):.2e}")
+        if (t % 10 == 0) and print_all:
+            print(f"[t={t}] KL: {kl_divergence:.4f}, grad: {np.linalg.norm(dY):.2e}, Y: {np.linalg.norm(Y):.2e}")
 
-
-        
-
+        # determines momentum based on iteration progress
         momentum = initial_momentum if t < 20 else final_momentum
 
+        # calculates gains in each step
         gains_02_logic = (dY > 0) != (delta_y > 0)
         gains_08_logic = (dY > 0) == (delta_y > 0)
         gains = (gains+0.2)*gains_02_logic + gains*0.8*gains_08_logic
         
-        # clip to min gain value
+        # clip to the minimum gain value
         gains = np.clip(gains, a_min=min_gain, a_max=np.inf)
 
+        # final determination of delta Y
         delta_y = momentum*delta_y - eta * (gains*dY)
-
         Y += delta_y
 
+        # removing early exaggeration
         if t==100:
             p_ij  /= 4
 
-
     return Y
 
+def get_non_default_args(args, default_args):
+    non_defaults = {}
+    for key, value in vars(args).items():
+        default_value = getattr(default_args, key)
+        if value != default_value:
+            non_defaults[key] = value
+    return non_defaults
 
-if __name__ == "__main__":
+
+def parse_tsne_args():
+    argparser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    
+    # file path args
+    argparser.add_argument("path_to_X", type=str, help="path to the input file")
+    argparser.add_argument("--path_to_labels", type=str, default="../data/mnist2500_labels.txt", help="path to the labels file")
+
+    # tsne args
+    argparser.add_argument("--no_dims", type=int, default=2, help="number of dimensions")
+    argparser.add_argument("--perplexity", type=int, default=30, help="perplexity of tsne, used for precision adjustment")
+    argparser.add_argument("--T", type=int, default=1000, help="number of time steps")
+    argparser.add_argument("--initial_momentum", type=float, default=0.5, help="initial momentum during early stage")
+    argparser.add_argument("--final_momentum", type=float, default=0.8, help="momentum after early stage")
+    argparser.add_argument("--eta", type=int, default=500, help="another component that determines delta Y")    
+    argparser.add_argument("--min_gain", type=float, default=0.01, help="minimum gains used for clipping during optimization")
+
+    # verbose indicators
+    argparser.add_argument("--print_all", action="store_true", help="Print t-sne progress during code execution")   
+
+    return argparser
+
+
+def main():
     print("Run Y = tsne(X, no_dims, perplexity) to perform t-SNE on your dataset.")
     print("Running example on 2,500 MNIST digits...")
-    X = np.loadtxt("mnist2500_X.txt")
+
+    # parses commandline args or set to default
+    parser = parse_tsne_args()
+    args = parser.parse_args()
+
+    print(args)
+
+    # set the default arg list and compare with CLI input
+    default_args = parser.parse_args(['dummy.txt'])
+    new_args = get_non_default_args(args, default_args)
+
+    # inform the user of non-default arguments if any
+    if new_args:
+        print("Non-default arguments passed via CLI:")
+        for key, value in new_args.items():
+            print(f"  --{key}={value}")
+
+    # load input and label files
+    X = np.loadtxt(args.path_to_X)
+    labels = np.loadtxt(args.path_to_labels)
+
+    # preprocess with PCA
     X = pca(X, 50)
-    labels = np.loadtxt("mnist2500_labels.txt")
-    Y = tsne(X=X, no_dims=2, perplexity=30, T=1000)
+
+    # extract tsne args
+    tsne_args = {
+        "no_dims": args.no_dims,
+        "perplexity": args.perplexity,
+        "T": args.T,
+        "initial_momentum": args.initial_momentum,
+        "final_momentum": args.final_momentum,
+        "eta": args.eta,
+        "min_gain": args.min_gain,
+        "print_all": args.print_all
+    }
+
+    # calls tsne()
+    Y = tsne(X, **tsne_args)
+
+    # visualization and save
     plt.scatter(Y[:, 0], Y[:, 1], s=20, c=labels, cmap='Paired')
     plt.colorbar()
     plt.savefig("mnist_tsne.png")
+
+if __name__ == "__main__":
+    main()
