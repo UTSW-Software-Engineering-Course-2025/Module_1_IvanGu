@@ -214,8 +214,6 @@ def main():
     parser = parse_tsne_args()
     args = parser.parse_args()
 
-    print(args)
-
     # set the default arg list and compare with CLI input
     default_args = parser.parse_args(['dummy.txt'])
     new_args = get_non_default_args(args, default_args)

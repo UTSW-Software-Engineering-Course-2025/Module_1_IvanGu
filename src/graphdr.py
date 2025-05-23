@@ -94,10 +94,16 @@ def graphdr(data, lambda_=20, no_rotations=True):
 
         
 def main():
-    #TODO change data and annotation file here
-    data = pd.read_csv('../data/hochgerner_2018.data.gz',sep='\t',index_col=0)
-    anno = pd.read_csv('../data/hochgerner_2018.anno',sep='\t',header=None)
-    anno = anno[1].values
+    # #TODO change data and annotation file here
+    # data = pd.read_csv('../data/hochgerner_2018.data.gz',sep='\t',index_col=0)
+    # anno = pd.read_csv('../data/hochgerner_2018.anno',sep='\t',header=None)
+    # anno = anno[1].values
+
+    # private use
+    data = pd.read_csv('../data/imc_data.csv')
+    data = np.abs(data.T) # match hochgerner single cell format
+    anno = pd.read_csv('../data/imc_annot.csv')
+    anno = anno['positive_marker'].values
 
     # preprocess and run graphDR algorithm
     data = graphdr_preprocessing(data)
@@ -105,10 +111,10 @@ def main():
 
     # visualize and save plot
     plt.figure(figsize=(15,10))
-    sns.scatterplot(x=graphdr_data[:,0], y=graphdr_data[:,1], linewidth=0, s=3, hue=anno)
+    sns.scatterplot(x=graphdr_data[:,0], y=graphdr_data[:,1], linewidth=0, s=20, hue=anno)
     plt.xlabel('GraphDR 1')
     plt.ylabel('GraphDR 2')
-    plt.savefig("graphdr_no_rotat.png")
+    plt.savefig("graphdr_imc.png")
 
 
 if __name__ == "__main__":
