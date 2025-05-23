@@ -1,9 +1,11 @@
-# Module1 t-sne from scratch IvanGu
-This repo implements a classic non-linear dimensionality reduction algorithmed called t-SNE: t-distributed Stochastic Neighbor Embedding.
+[![Docs Butler](https://github.com/UTSW-Software-Engineering-Course-2025/Module_1_IvanGu/actions/workflows/static.yml/badge.svg?branch=docs)](https://github.com/UTSW-Software-Engineering-Course-2025/Module_1_IvanGu/actions/workflows/static.yml)
+
+# Module1:t-sne and GraphDR (Ivan's Version)
+This repo implements two dimensionality reduction algorithms: t-sne and GraphDR. t-sne (t-distributed Stochastic Neighbor Embedding) is a classic non-linear dimensionality reduction algorithme; whereas GraphDR is a quasilinear visualization and general representation tool. 
 
 For a more detailed description of t-SNE, please refer to https://en.wikipedia.org/wiki/T-distributed_stochastic_neighbor_embedding
 
-# Getting started
+# Getting started (t-sne)
 
 - `conda create -n utsw_swe_25 python=3.9 matplotlib` this creates a conda env called `utsw_swe_25`, with required packages `matplotlib` (which includes `numpy`)
 - `conda activate utsw_swe_25` this activates the environment
@@ -27,3 +29,8 @@ A full list of parameter options:
    --eta | assumed radius for cells to use in cell segmentation | 500
    --min_gain |  minimum gains used for clipping during optimization | 0.01
    --print_all |  print t-sne progress during code execution | 
+
+
+# Getting started (GraphDR)
+- `conda env create -f environment.yml` this creates an env called `utsw_swe_25`
+- `python graphdr.py` runs GraphDR. GraphDR (Ivan's Version) do not currently have CLI capability. Navigate to the source code and search for `TODO` to change the file paths and optional arguments (e.g. `lambda_`, `no_rotations`)
